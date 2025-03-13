@@ -3,17 +3,16 @@ const router = express.Router();
 const { connectToDatabase } = require("../db");
 const { ObjectId } = require("mongodb");
 
-const COOLDOWN_PERIOD = 60 * 60 * 1000; // 1 hour in milliseconds
+const COOLDOWN_PERIOD = 60 * 60 * 1000; 
 
 // Function to get the correct client IP address
 const getClientIp = (req) => {
   let ip = req.headers["x-forwarded-for"]?.split(",")[0] || 
            req.connection?.remoteAddress || 
            req.socket?.remoteAddress;
-  return ip === "::1" ? "127.0.0.1" : ip; // Convert IPv6 localhost to IPv4
+  return ip === "::1" ? "127.0.0.1" : ip; 
 };
 
-// ✅ Route: Get all active coupons
 router.get("/", async (req, res) => {
   try {
     const { db } = await connectToDatabase();
@@ -31,7 +30,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Route: Claim a coupon
+// Route: Claim a coupon
 router.post("/claim", async (req, res) => {
   try {
     // Get or create a unique client ID from cookies
@@ -47,13 +46,13 @@ router.post("/claim", async (req, res) => {
       });
     }
 
-    // ✅ Get client IP address
+    //Get client IP address
     const clientIp = getClientIp(req);
     console.log("User IP:", clientIp);
 
     const { db } = await connectToDatabase();
 
-    // ✅ Check if the user has already claimed a coupon recently
+    // Check if the user has already claimed a coupon recently
     const userClaim = await db.collection("claims").findOne({
       $or: [{ clientId: newClientId }, { ipAddress: clientIp }],
     });
@@ -74,7 +73,7 @@ router.post("/claim", async (req, res) => {
       }
     }
 
-    // ✅ Get the next available coupon using round-robin
+    // Get the next available coupon using round-robin
     const couponsCollection = db.collection("coupons");
     const couponsCursor = await couponsCollection.find({ active: true }).sort({ claimCount: 1 }).limit(1);
     const coupons = await couponsCursor.toArray();
@@ -88,7 +87,7 @@ router.post("/claim", async (req, res) => {
 
     const coupon = coupons[0];
 
-    // ✅ Update or insert claim record
+    // Update or insert claim record
     await db.collection("claims").updateOne(
       {
         $or: [{ clientId: newClientId }, { ipAddress: clientIp }],
@@ -105,7 +104,7 @@ router.post("/claim", async (req, res) => {
       { upsert: true }
     );
 
-    // ✅ Update coupon claim count
+    // Update coupon claim count
     await couponsCollection.updateOne({ _id: coupon._id }, { $inc: { claimCount: 1 } });
 
     return res.json({

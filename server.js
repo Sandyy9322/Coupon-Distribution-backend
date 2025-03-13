@@ -5,20 +5,16 @@ const cookieParser = require("cookie-parser")
 const { connectToDatabase } = require("./db")
 const { ObjectId } = require("mongodb")
 
-// Import routes
 const couponRoutes = require("./routes/coupons")
 
-// Create Express app
 const app = express()
 const PORT = process.env.PORT || 5000
 
 // Middleware
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Vite default port
-    credentials: true,
-  }),
-)
+app.use(cors({
+    origin: ["https://client-sooty-phi.vercel.app", "http://localhost:5173"], 
+    credentials: true, 
+  }));
 app.use(express.json())
 app.use(cookieParser())
 
@@ -53,7 +49,6 @@ app.get("/api/seed", async (req, res) => {
       })
     }
 
-    // Sample coupon codes
     const coupons = [
       { code: "SAVE10", discount: "10%", active: true, claimCount: 0 },
       { code: "SAVE20", discount: "20%", active: true, claimCount: 0 },
@@ -75,7 +70,6 @@ app.get("/api/seed", async (req, res) => {
   }
 })
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
